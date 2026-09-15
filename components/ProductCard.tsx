@@ -15,15 +15,21 @@ export default function ProductCard({
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Check whether this product is already in the user's wishlist
   useEffect(() => {
-    let mounted = true;
+    checkWishlist();
+  }, [product.id]);
 
-    async function loadWishlistStatus() {
+  async function checkWishlist() {
+    try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user || !mounted) return;
+      if (!user) {
+        setIsWishlisted(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("wishlists")
@@ -32,17 +38,16 @@ export default function ProductCard({
         .eq("product_id", String(product.id))
         .maybeSingle();
 
-      if (!error && mounted) {
-        setIsWishlisted(Boolean(data));
+      if (error) {
+        console.error("Wishlist check error:", error);
+        return;
       }
+
+      setIsWishlisted(Boolean(data));
+    } catch (error) {
+      console.error("Wishlist check error:", error);
     }
-
-    loadWishlistStatus();
-
-    return () => {
-      mounted = false;
-    };
-  }, [product.id]);
+  }
 
   async function toggleWishlist(
     event: React.MouseEvent<HTMLButtonElement>
@@ -52,18 +57,20 @@ export default function ProductCard({
 
     if (loading) return;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      window.location.href = `/login?redirect=/product/${product.id}`;
-      return;
-    }
-
-    setLoading(true);
-
     try {
+      setLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      // User is not logged in
+      if (!user) {
+        window.location.href = `/login?redirect=/shop`;
+        return;
+      }
+
+      // Remove from wishlist
       if (isWishlisted) {
         const { error } = await supabase
           .from("wishlists")
@@ -72,28 +79,40 @@ export default function ProductCard({
           .eq("product_id", String(product.id));
 
         if (error) {
-          console.error("Wishlist delete error:", error);
-          alert(error.message);
+          console.error("Wishlist remove error:", error);
+          alert("Could not remove this product from wishlist.");
           return;
         }
 
         setIsWishlisted(false);
-      } else {
-        const { error } = await supabase
-          .from("wishlists")
-          .insert({
-            user_id: user.id,
-            product_id: String(product.id),
-          });
+        return;
+      }
 
-        if (error) {
-          console.error("Wishlist insert error:", error);
-          alert(error.message);
+      // Add to wishlist
+      const { error } = await supabase
+        .from("wishlists")
+        .insert({
+          user_id: user.id,
+          product_id: String(product.id),
+        });
+
+      if (error) {
+        console.error("Wishlist add error:", error);
+
+        // Duplicate wishlist protection
+        if (
+          error.code === "23505" ||
+          error.message?.toLowerCase().includes("duplicate")
+        ) {
+          setIsWishlisted(true);
           return;
         }
 
-        setIsWishlisted(true);
+        alert("Could not add this product to wishlist.");
+        return;
       }
+
+      setIsWishlisted(true);
     } catch (error) {
       console.error("Wishlist error:", error);
       alert("Wishlist update failed. Please try again.");
@@ -107,26 +126,32 @@ export default function ProductCard({
       className="group relative block"
       data-aos="fade-up"
     >
+      {/* PRODUCT IMAGE */}
       <div className="relative">
-        <Link href={`/product/${product.id}`} className="block">
+        <Link
+          href={`/product/${product.id}`}
+          className="block"
+        >
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-white">
             <Image
               src={product.image}
               alt={product.name}
               fill
+              priority={false}
               className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-110"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
 
+            {/* BEST SELLER */}
             {product.bestSeller && (
-              <span className="absolute left-3 top-3 rounded-full bg-[#d4af37] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
+              <span className="absolute left-3 top-3 rounded-full bg-[#d4af37] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-black shadow-sm">
                 Best Seller
               </span>
             )}
           </div>
         </Link>
 
-        {/* Wishlist Button */}
+        {/* WISHLIST HEART */}
         <button
           type="button"
           onClick={toggleWishlist}
@@ -136,10 +161,30 @@ export default function ProductCard({
               ? "Remove from wishlist"
               : "Add to wishlist"
           }
-          className="absolute right-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-lg transition-all duration-200 hover:scale-110 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          title={
+            isWishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
+          className={`
+            absolute right-3 top-3 z-50
+            flex h-12 w-12 items-center justify-center
+            rounded-full
+            border border-black/10
+            shadow-xl
+            transition-all duration-200
+            hover:scale-110
+            disabled:cursor-not-allowed
+            disabled:opacity-60
+            ${
+              isWishlisted
+                ? "bg-black text-white"
+                : "bg-white text-black hover:bg-black hover:text-white"
+            }
+          `}
         >
           <Heart
-            size={21}
+            size={23}
             strokeWidth={1.8}
             className={
               isWishlisted
@@ -150,7 +195,11 @@ export default function ProductCard({
         </button>
       </div>
 
-      <Link href={`/product/${product.id}`} className="block">
+      {/* PRODUCT INFORMATION */}
+      <Link
+        href={`/product/${product.id}`}
+        className="block"
+      >
         <div className="mt-4">
           <p className="text-xs uppercase tracking-[0.15em] text-black/45">
             {product.category}
