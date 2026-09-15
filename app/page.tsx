@@ -34,17 +34,17 @@ export default function HomePage() {
 
       {/* STATS */}
       <section className="border-y border-navy/10 bg-white/40">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 grid grid-cols-3 gap-6 text-center">
+        <div className="max-w-3xl mx-auto px-6 md:px-12 py-10 grid grid-cols-3 gap-4 md:gap-10 text-center divide-x divide-navy/10">
           <div>
-            <div className="font-display text-3xl text-navy"><NumberTicker value={12000} suffix="+" /></div>
+            <div className="font-display text-2xl md:text-3xl text-navy"><NumberTicker value={12000} suffix="+" /></div>
             <p className="text-xs text-navy/50 mt-1 uppercase tracking-wide">Happy Customers</p>
           </div>
           <div>
-            <div className="font-display text-3xl text-navy"><NumberTicker value={4} suffix="–8 days" /></div>
+            <div className="font-display text-2xl md:text-3xl text-navy">4–8 days</div>
             <p className="text-xs text-navy/50 mt-1 uppercase tracking-wide">Delivery Time</p>
           </div>
           <div>
-            <div className="font-display text-3xl text-navy"><NumberTicker value={100} suffix="% Free" /></div>
+            <div className="font-display text-2xl md:text-3xl text-navy"><NumberTicker value={100} suffix="% Free" /></div>
             <p className="text-xs text-navy/50 mt-1 uppercase tracking-wide">Shipping</p>
           </div>
         </div>
