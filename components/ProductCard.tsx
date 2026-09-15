@@ -16,46 +16,54 @@ export default function ProductCard({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    checkWishlist();
-  }, [product.id]);
+    let mounted = true;
 
-  async function checkWishlist() {
-    try {
+    async function loadWishlistStatus() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) return;
+      if (!user || !mounted) return;
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("wishlists")
         .select("id")
         .eq("user_id", user.id)
         .eq("product_id", String(product.id))
         .maybeSingle();
 
-      setIsWishlisted(!!data);
-    } catch (error) {
-      console.error("Wishlist check error:", error);
+      if (!error && mounted) {
+        setIsWishlisted(Boolean(data));
+      }
     }
-  }
 
-  async function toggleWishlist(event: React.MouseEvent<HTMLButtonElement>) {
+    loadWishlistStatus();
+
+    return () => {
+      mounted = false;
+    };
+  }, [product.id]);
+
+  async function toggleWishlist(
+    event: React.MouseEvent<HTMLButtonElement>
+  ) {
     event.preventDefault();
     event.stopPropagation();
 
+    if (loading) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = `/login?redirect=/product/${product.id}`;
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      setLoading(true);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
-
       if (isWishlisted) {
         const { error } = await supabase
           .from("wishlists")
@@ -64,20 +72,22 @@ export default function ProductCard({
           .eq("product_id", String(product.id));
 
         if (error) {
-          console.error("Wishlist remove error:", error);
+          console.error("Wishlist delete error:", error);
           alert(error.message);
           return;
         }
 
         setIsWishlisted(false);
       } else {
-        const { error } = await supabase.from("wishlists").insert({
-          user_id: user.id,
-          product_id: String(product.id),
-        });
+        const { error } = await supabase
+          .from("wishlists")
+          .insert({
+            user_id: user.id,
+            product_id: String(product.id),
+          });
 
         if (error) {
-          console.error("Wishlist add error:", error);
+          console.error("Wishlist insert error:", error);
           alert(error.message);
           return;
         }
@@ -85,76 +95,84 @@ export default function ProductCard({
         setIsWishlisted(true);
       }
     } catch (error) {
-      console.error("Wishlist toggle error:", error);
-      alert("Wishlist update failed.");
+      console.error("Wishlist error:", error);
+      alert("Wishlist update failed. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="group block" data-aos="fade-up">
+    <article
+      className="group relative block"
+      data-aos="fade-up"
+    >
       <div className="relative">
         <Link href={`/product/${product.id}`} className="block">
-          <div className="relative overflow-hidden rounded-3xl bg-white/60 aspect-[4/5]">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-white">
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-[600ms] ease-[cubic-bezier(.25,.46,.45,.94)] group-hover:scale-[1.12]"
-              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-110"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
 
             {product.bestSeller && (
-              <span className="absolute top-3 left-3 bg-gold text-navy text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+              <span className="absolute left-3 top-3 rounded-full bg-[#d4af37] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
                 Best Seller
               </span>
             )}
           </div>
         </Link>
 
+        {/* Wishlist Button */}
         <button
           type="button"
           onClick={toggleWishlist}
           disabled={loading}
           aria-label={
-            isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+            isWishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
           }
-          className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition disabled:opacity-60"
+          className="absolute right-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-lg transition-all duration-200 hover:scale-110 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Heart
-            size={18}
-            strokeWidth={1.7}
+            size={21}
+            strokeWidth={1.8}
             className={
               isWishlisted
                 ? "fill-red-500 text-red-500"
-                : "text-navy"
+                : "text-black"
             }
           />
         </button>
       </div>
 
       <Link href={`/product/${product.id}`} className="block">
-        <div className="mt-3">
-          <p className="text-xs uppercase tracking-wide text-navy/50">
+        <div className="mt-4">
+          <p className="text-xs uppercase tracking-[0.15em] text-black/45">
             {product.category}
           </p>
 
-          <h3 className="font-medium text-navy">{product.name}</h3>
+          <h3 className="mt-1 font-medium text-black">
+            {product.name}
+          </h3>
 
-          <div className="flex items-center gap-2 mt-1">
-            <span className="font-semibold text-navy">
+          <div className="mt-1 flex items-center gap-2">
+            <span className="font-semibold text-black">
               Rs {product.price.toLocaleString()}
             </span>
 
             {product.oldPrice && (
-              <span className="text-xs text-navy/40 line-through">
+              <span className="text-xs text-black/40 line-through">
                 Rs {product.oldPrice.toLocaleString()}
               </span>
             )}
           </div>
         </div>
       </Link>
-    </div>
+    </article>
   );
 }
