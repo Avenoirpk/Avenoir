@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+
 import { CartProvider } from "@/lib/cart-context";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Marquee from "@/components/Marquee";
-import LogoSplash from "@/components/LogoSplash";
 import AosInit from "@/components/AosInit";
+
 import { Playfair_Display, Poppins } from "next/font/google";
 
 const playfair = Playfair_Display({
@@ -40,9 +41,10 @@ export default function RootLayout({
     >
       <body className="font-sans text-navy">
         <CartProvider>
-          <LogoSplash />
           <AosInit />
+
           <Marquee />
+
           <Header />
 
           <main className="min-h-screen">
