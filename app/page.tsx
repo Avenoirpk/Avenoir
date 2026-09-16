@@ -7,6 +7,8 @@ import NumberTicker from "@/components/NumberTicker";
 import HeroSwiper from "@/components/HeroSwiper";
 import BestSellerSwiper from "@/components/BestSellerSwiper";
 import AnimatedHeading from "@/components/AnimatedHeading";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import FaqAccordion from "@/components/FaqAccordion";
 
 const categoryImage = (cat: string) => products.find((p) => p.category === cat)?.image ?? "";
 
@@ -106,6 +108,12 @@ export default function HomePage() {
           <p className="text-sm text-navy/50">Day-by-day updates, 4–8 working days.</p>
         </div>
       </section>
+
+      {/* TESTIMONIALS */}
+      <TestimonialsSection />
+
+      {/* FAQ */}
+      <FaqAccordion />
     </>
   );
 }
