@@ -6,6 +6,7 @@ import ShimmerButton from "@/components/ShimmerButton";
 import NumberTicker from "@/components/NumberTicker";
 import HeroSwiper from "@/components/HeroSwiper";
 import BestSellerSwiper from "@/components/BestSellerSwiper";
+import AnimatedHeading from "@/components/AnimatedHeading";
 
 const categoryImage = (cat: string) => products.find((p) => p.category === cat)?.image ?? "";
 
@@ -17,7 +18,9 @@ export default function HomePage() {
         <div data-aos="fade-right">
           <p className="uppercase tracking-[0.2em] text-xs text-gold mb-4">New Season Edit</p>
           <h1 className="font-display text-5xl md:text-6xl leading-tight text-navy mb-6">
-            Considered pieces,<br /> worn every day.
+            <AnimatedHeading>Considered pieces,</AnimatedHeading>
+            <br />
+            <AnimatedHeading delay={0.35}>worn every day.</AnimatedHeading>
           </h1>
           <p className="text-navy/60 max-w-md mb-8">
             Bags, shoes, jewelry and more — designed with quiet detail and made to outlast trends.
@@ -34,17 +37,17 @@ export default function HomePage() {
 
       {/* STATS */}
       <section className="border-y border-navy/10 bg-white/40">
-        <div className="max-w-3xl mx-auto px-6 md:px-12 py-10 grid grid-cols-3 gap-4 md:gap-10 text-center divide-x divide-navy/10">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 grid grid-cols-3 gap-6 text-center">
           <div>
-            <div className="font-display text-2xl md:text-3xl text-navy"><NumberTicker value={12000} suffix="+" /></div>
+            <div className="font-display text-3xl text-navy"><NumberTicker value={12000} suffix="+" /></div>
             <p className="text-xs text-navy/50 mt-1 uppercase tracking-wide">Happy Customers</p>
           </div>
           <div>
-            <div className="font-display text-2xl md:text-3xl text-navy">4–8 days</div>
+            <div className="font-display text-3xl text-navy"><NumberTicker value={4} suffix="–8 days" /></div>
             <p className="text-xs text-navy/50 mt-1 uppercase tracking-wide">Delivery Time</p>
           </div>
           <div>
-            <div className="font-display text-2xl md:text-3xl text-navy"><NumberTicker value={100} suffix="% Free" /></div>
+            <div className="font-display text-3xl text-navy"><NumberTicker value={100} suffix="% Free" /></div>
             <p className="text-xs text-navy/50 mt-1 uppercase tracking-wide">Shipping</p>
           </div>
         </div>
