@@ -15,7 +15,8 @@
 "@supabase/supabase-js": "^2.57.4",
 "aos": "^2.3.4",
 "swiper": "^11.1.5",
-"lucide-react": "^0.468.0"
+"lucide-react": "^0.468.0",
+"framer-motion": "^11.11.17"
 },
 "devDependencies": {
 "typescript": "^5.5.4",
