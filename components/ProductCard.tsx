@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Product } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 
@@ -14,8 +15,9 @@ export default function ProductCard({
 }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const secondImage = product.images?.find((src) => src !== product.image);
 
-  // Check whether this product is already in the user's wishlist
   useEffect(() => {
     checkWishlist();
   }, [product.id]);
@@ -64,13 +66,11 @@ export default function ProductCard({
         data: { user },
       } = await supabase.auth.getUser();
 
-      // User is not logged in
       if (!user) {
         window.location.href = `/login?redirect=/shop`;
         return;
       }
 
-      // Remove from wishlist
       if (isWishlisted) {
         const { error } = await supabase
           .from("wishlists")
@@ -88,7 +88,6 @@ export default function ProductCard({
         return;
       }
 
-      // Add to wishlist
       const { error } = await supabase
         .from("wishlists")
         .insert({
@@ -99,7 +98,6 @@ export default function ProductCard({
       if (error) {
         console.error("Wishlist add error:", error);
 
-        // Duplicate wishlist protection
         if (
           error.code === "23505" ||
           error.message?.toLowerCase().includes("duplicate")
@@ -122,9 +120,13 @@ export default function ProductCard({
   }
 
   return (
-    <article
+    <motion.article
       className="group relative block"
       data-aos="fade-up"
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      whileHover={{ y: -4 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
     >
       {/* PRODUCT IMAGE */}
       <div className="relative">
@@ -132,30 +134,66 @@ export default function ProductCard({
           href={`/product/${product.id}`}
           className="block"
         >
-          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-white">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-white shadow-sm transition-shadow duration-300 group-hover:shadow-xl">
             <Image
               src={product.image}
               alt={product.name}
               fill
               priority={false}
-              className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-110"
+              className={`object-cover transition-[transform,opacity] duration-[600ms] ease-out group-hover:scale-110 ${
+                secondImage && isHovered ? "opacity-0" : "opacity-100"
+              }`}
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
 
-            {/* BEST SELLER */}
+            {secondImage && (
+              <Image
+                src={secondImage}
+                alt={product.name}
+                fill
+                className={`object-cover scale-110 transition-opacity duration-500 ease-out ${
+                  isHovered ? "opacity-100" : "opacity-0"
+                }`}
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              />
+            )}
+
             {product.bestSeller && (
               <span className="absolute left-3 top-3 rounded-full bg-[#d4af37] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-black shadow-sm">
                 Best Seller
               </span>
             )}
+
+            <AnimatePresence>
+              {isHovered && (
+                <motion.button
+                  type="button"
+                  initial={{ y: 24, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 24, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = `/product/${product.id}`;
+                  }}
+                  className="absolute bottom-3 left-3 right-3 z-40 hidden items-center justify-center gap-2 rounded-full bg-navy py-2.5 text-xs font-semibold uppercase tracking-wide text-cream shadow-lg md:flex"
+                >
+                  <ShoppingBag size={15} strokeWidth={1.8} />
+                  Add to Cart
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </Link>
 
-        {/* WISHLIST HEART */}
-        <button
+        <motion.button
           type="button"
           onClick={toggleWishlist}
           disabled={loading}
+          whileTap={{ scale: 0.8 }}
+          animate={isWishlisted ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
           aria-label={
             isWishlisted
               ? "Remove from wishlist"
@@ -172,7 +210,7 @@ export default function ProductCard({
             rounded-full
             border border-black/10
             shadow-xl
-            transition-all duration-200
+            transition-colors duration-200
             hover:scale-110
             disabled:cursor-not-allowed
             disabled:opacity-60
@@ -192,7 +230,7 @@ export default function ProductCard({
                 : "text-black"
             }
           />
-        </button>
+        </motion.button>
       </div>
 
       {/* PRODUCT INFORMATION */}
@@ -222,6 +260,6 @@ export default function ProductCard({
           </div>
         </div>
       </Link>
-    </article>
+    </motion.article>
   );
 }
