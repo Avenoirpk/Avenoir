@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -102,7 +103,12 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-[80vh] bg-[#f8f7f4] px-5 py-16 sm:px-8">
-      <div className="mx-auto grid max-w-6xl overflow-hidden bg-white shadow-[0_20px_70px_rgba(0,0,0,0.08)] lg:grid-cols-2">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="mx-auto grid max-w-6xl overflow-hidden bg-white shadow-[0_20px_70px_rgba(0,0,0,0.08)] lg:grid-cols-2"
+      >
         <div className="hidden min-h-[650px] bg-[#111] p-12 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-[#c9a96e]">
@@ -121,23 +127,32 @@ export default function LoginPage() {
 
         <div className="flex min-h-[650px] items-center justify-center px-6 py-12 sm:px-12">
           <div className="w-full max-w-md">
-            <div className="mb-10">
-              <p className="text-xs uppercase tracking-[0.3em] text-[#a3834d]">
-                {mode === "login" ? "Welcome back" : "Join Avenoir"}
-              </p>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.25 }}
+                className="mb-10"
+              >
+                <p className="text-xs uppercase tracking-[0.3em] text-[#a3834d]">
+                  {mode === "login" ? "Welcome back" : "Join Avenoir"}
+                </p>
 
-              <h2 className="mt-3 font-serif text-4xl text-[#151515]">
-                {mode === "login" ? "Sign in" : "Create account"}
-              </h2>
+                <h2 className="mt-3 font-serif text-4xl text-[#151515]">
+                  {mode === "login" ? "Sign in" : "Create account"}
+                </h2>
 
-              <p className="mt-3 text-sm leading-6 text-gray-500">
-                {mode === "login"
-                  ? "Enter your details to access your account."
-                  : "Create an account to track orders and save your favorites."}
-              </p>
-            </div>
+                <p className="mt-3 text-sm leading-6 text-gray-500">
+                  {mode === "login"
+                    ? "Enter your details to access your account."
+                    : "Create an account to track orders and save your favorites."}
+                </p>
+              </motion.div>
+            </AnimatePresence>
 
-            <div className="mb-8 flex border-b border-gray-200">
+            <div className="relative mb-8 flex border-b border-gray-200">
               <button
                 type="button"
                 onClick={() => {
@@ -145,10 +160,8 @@ export default function LoginPage() {
                   setError("");
                   setMessage("");
                 }}
-                className={`-mb-px flex-1 border-b-2 pb-3 text-sm font-medium transition ${
-                  mode === "login"
-                    ? "border-[#151515] text-[#151515]"
-                    : "border-transparent text-gray-400"
+                className={`-mb-px flex-1 pb-3 text-sm font-medium transition-colors ${
+                  mode === "login" ? "text-[#151515]" : "text-gray-400"
                 }`}
               >
                 Sign in
@@ -161,44 +174,74 @@ export default function LoginPage() {
                   setError("");
                   setMessage("");
                 }}
-                className={`-mb-px flex-1 border-b-2 pb-3 text-sm font-medium transition ${
-                  mode === "signup"
-                    ? "border-[#151515] text-[#151515]"
-                    : "border-transparent text-gray-400"
+                className={`-mb-px flex-1 pb-3 text-sm font-medium transition-colors ${
+                  mode === "signup" ? "text-[#151515]" : "text-gray-400"
                 }`}
               >
                 Create account
               </button>
+
+              {/* Sliding active-tab indicator */}
+              <motion.div
+                className="absolute bottom-0 h-[2px] w-1/2 bg-[#151515]"
+                animate={{ x: mode === "login" ? "0%" : "100%" }}
+                transition={{ type: "spring", stiffness: 400, damping: 32 }}
+              />
             </div>
 
-            {error && (
-              <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0, x: 0 }}
+                  animate={{ opacity: 1, x: [0, -8, 8, -6, 6, 0] }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                  {error}
+                </motion.div>
+              )}
 
-            {message && (
-              <div className="mb-5 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {message}
-              </div>
-            )}
+              {message && (
+                <motion.div
+                  key="message"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mb-5 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+                >
+                  {message}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {mode === "signup" && (
-                <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-600">
-                    Full name
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    placeholder="Your full name"
-                    className="w-full border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#151515]"
-                    autoComplete="name"
-                  />
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {mode === "signup" && (
+                  <motion.div
+                    key="fullName"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-600">
+                      Full name
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      placeholder="Your full name"
+                      className="w-full border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#151515]"
+                      autoComplete="name"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div>
                 <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-600">
@@ -232,36 +275,48 @@ export default function LoginPage() {
                 />
               </div>
 
-              {mode === "signup" && (
-                <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-600">
-                    Confirm password
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(event) =>
-                      setConfirmPassword(event.target.value)
-                    }
-                    placeholder="Repeat your password"
-                    className="w-full border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#151515]"
-                    autoComplete="new-password"
-                    required
-                  />
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {mode === "signup" && (
+                  <motion.div
+                    key="confirmPassword"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-600">
+                      Confirm password
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(event) =>
+                        setConfirmPassword(event.target.value)
+                      }
+                      placeholder="Repeat your password"
+                      className="w-full border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#151515]"
+                      autoComplete="new-password"
+                      required
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <button
+              <motion.button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#151515] px-5 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#a3834d] disabled:cursor-not-allowed disabled:opacity-60"
+                whileHover={{ scale: loading ? 1 : 1.015 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="w-full bg-[#151515] px-5 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#a3834d] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading
                   ? "Please wait..."
                   : mode === "login"
                     ? "Sign in"
                     : "Create account"}
-              </button>
+              </motion.button>
             </form>
 
             <div className="mt-8 text-center">
@@ -274,7 +329,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </main>
   );
 }
